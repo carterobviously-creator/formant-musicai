@@ -1,0 +1,11 @@
+#$*:bin:rtsh
+
+hget <webhttp/2323>
+hget <audiomaster>>1.2>
+hget <lpm.ai>
+lpm.init (
+    model.train = /database/music_database, /database/sfx_database
+    load.model = model
+    // the reason to train an ai model is for some of the other things like wavefrom decoding from the pre-downloaded ai model
+)
+   :silo>/generation/generate.rtsh

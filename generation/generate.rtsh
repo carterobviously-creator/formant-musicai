@@ -1,0 +1,12 @@
+slio-off (
+    hget <lpm.ai>
+    hget <audiomaster>>1.2>
+    if {
+        index.request := input >>!
+        lpm.ai {index.request} -model_format =txt -= /models/.txt
+         hget <fsq_detoken>
+          fsq_detoken = lpm
+           audiomaster.fsq_detoken = output.silo
+    }
+)
+:silo /uihtml/index.html

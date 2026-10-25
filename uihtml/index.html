@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FORMANT — Music Studio</title>
+<style>
+:root{--bg:#101113;--panel:#181a1e;--line:#30333a;--text:#eeeef0;--muted:#9297a0;--accent:#d8ff65}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px Inter,Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent)}
+.app{min-height:100vh;display:grid;grid-template-columns:225px minmax(0,1fr)}
+aside{padding:20px 13px;border-right:1px solid var(--line);background:#141518;min-height:100vh}
+.brand{font-size:17px;font-weight:850;letter-spacing:3px;margin:4px 8px 35px}
+.brand b{background:var(--accent);color:#15170d;padding:5px 8px;border-radius:5px;margin-right:8px}
+.label{font-size:10px;color:var(--muted);letter-spacing:1.5px;font-weight:bold;margin:20px 8px 10px}
+.nav{padding:10px;border-radius:7px;color:#aeb1b8;cursor:pointer;margin:3px 0}
+.nav.active,.nav:hover{background:#292c31;color:white}
+.song{padding:10px;border-radius:8px;display:flex;align-items:center;gap:9px;cursor:pointer;margin:4px 0}
+.song.active,.song:hover{background:#292c31}
+.cover{width:36px;height:36px;border-radius:5px;background:#323d29;display:grid;place-items:center;font-size:17px;flex-shrink:0}
+.song small{display:block;color:var(--muted);margin-top:4px;font-size:10px}
+.song div:nth-child(2){min-width:0;overflow-wrap:anywhere}
+main{padding:25px;min-width:0;max-width:1450px;width:100%;margin:auto}
+h1{font-size:27px;letter-spacing:-1px;margin:0 0 7px}
+.sub{color:var(--muted);font-size:12px;line-height:1.6}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:23px;flex-wrap:wrap}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 265px;gap:15px;align-items:start}
+.column{display:flex;flex-direction:column;gap:15px;min-width:0}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:17px;min-width:0}
+h2{font-size:13px;margin:0 0 5px}
+.cardhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px}
+textarea,input[type=text],input[type=number],select{width:100%;background:#111316;border:1px solid #373b43;color:var(--text);border-radius:6px;padding:10px}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+label{display:block;font-size:11px;color:#bfc2c8;font-weight:600;margin:14px 0 7px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#23262b;color:var(--text);border-radius:6px;padding:9px 12px;font-size:12px;font-weight:600}
+.btn:hover{border-color:#707783}
+.btn.primary{background:var(--accent);color:#171a0e;border-color:var(--accent)}
+.chip{border:1px solid var(--line);background:#1c1e22;color:#afb3bb;padding:7px 9px;border-radius:5px;font-size:11px}
+.chip.active{color:var(--accent);border-color:#75874b;background:#282e20}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+hr{border:0;border-top:1px solid var(--line);margin:17px 0}
+.range{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin:15px 0 6px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.wave{width:100%;height:100px;background:#111316;border-radius:6px;display:block;margin-top:15px}
+.timeline{display:flex;gap:3px;height:43px;margin-top:14px}
+.segment{border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;overflow:hidden;white-space:nowrap;background:#313c27;border:1px solid #50613a;min-width:0}
+.segment:nth-child(2){background:#28394a;border-color:#425e79}
+.segment:nth-child(3){background:#3a304b;border-color:#5b4b75}
+.segment:nth-child(4){background:#48372a;border-color:#6e5438}
+.muted{color:var(--muted);font-size:11px;line-height:1.6}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.stat{padding:11px;border-radius:6px;background:#111316}
+.stat small{color:var(--muted);font-size:10px}
+.stat strong{display:block;font-size:18px;margin-top:5px}
+.transport{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.transport button{min-width:38px;min-height:38px}
+#status{padding:10px;background:#111316;border-radius:6px;font-size:11px;line-height:1.6;color:var(--muted);margin-top:12px}
+#library{max-height:420px;overflow:auto}
+#progress{height:3px;background:#30343b;margin-top:10px;border-radius:3px;overflow:hidden}
+#progress span{height:100%;width:0;display:block;background:var(--accent)}
+@media(max-width:950px){.layout{grid-template-columns:minmax(0,1fr)}aside{min-height:0;border-right:0;border-bottom:1px solid var(--line)}.app{grid-template-columns:1fr}.brand{margin-bottom:18px}.sidebar-nav{display:flex;flex-wrap:wrap}.label{margin-top:14px}#library{display:flex;flex-wrap:wrap;gap:5px}.song{min-width:180px}}
+@media(max-width:500px){main{padding:15px}.grid{grid-template-columns:1fr 1fr}.grid .field:last-child{grid-column:1/-1}h1{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="brand"><b>ƒ</b>FORMANT</div>
+  <div class="label">WORKSPACE</div>
+  <div class="sidebar-nav">
+    <div class="nav active" data-page="studio">▦ &nbsp; Studio</div>
+    <div class="nav" data-page="library">▤ &nbsp; Song library</div>
+    <div class="nav" data-page="sources">≋ &nbsp; Audio sources</div>
+  </div>
+  <div class="label">GENERATED TRACKS <span id="count">03</span></div>
+  <div id="library"></div>
+  <button class="btn" id="new" style="width:100%;margin-top:12px">＋ New track</button>
+  <div class="label">ENGINE</div>
+  <div class="card" style="padding:12px">
+    <div class="row"><span class="muted">Audio synthesis</span><span style="color:var(--accent)">● Ready</span></div>
+    <div id="progress"><span id="learningbar"></span></div>
+    <p class="muted" id="learningtext">Preference profile: 0%</p>
+  </div>
+</aside>
+
+<main>
+  <div class="top">
+    <div><h1>Music studio</h1><div class="sub">Build original music, experiment with styles, and export playable audio.</div></div>
+    <div class="row"><button class="btn" id="save">Save settings</button><button class="btn primary" id="export">Export WAV ↓</button></div>
+  </div>
+
+  <div class="layout">
+    <div class="column">
+      <section class="card" id="studio">
+        <div class="cardhead"><div><h2>Track composition</h2><div class="sub">Describe the sound you want to create.</div></div><span class="muted">01 / COMPOSE</span></div>
+        <label for="prompt">Creative brief</label>
+        <textarea id="prompt">Moody late-night electronic music, deep bass, crisp broken drums, warm atmospheric chords, evolving textures and a memorable melodic hook.</textarea>
+
+        <label>Genre</label>
+        <div class="chips" id="genres">
+          <button class="chip active">Electronic</button><button class="chip">House</button><button class="chip">Hip-hop</button><button class="chip">Ambient</button><button class="chip">Synthwave</button><button class="chip">R&B</button><button class="chip">Rock</button><button class="chip">Lo-fi</button>
+        </div>
+
+        <div class="grid">
+          <div class="field"><label for="mood">Mood</label><select id="mood"><option>Late-night</option><option>Dreamy</option><option>Dark</option><option>Energetic</option><option>Warm</option><option>Melancholic</option><option>Uplifting</option></select></div>
+          <div class="field"><label for="tempo">Tempo (BPM)</label><input id="tempo" type="number" min="50" max="200" value="118"></div>
+          <div class="field"><label for="duration">Duration</label><select id="duration"><option value="30">30 seconds</option><option value="60">1 minute</option><option value="120" selected>2 minutes</option><option value="180">3 minutes</option><option value="240">4 minutes</option></select></div>
+        </div>
+
+        <label>Arrangement</label>
+        <div class="chips" id="arrangements">
+          <button class="chip active">Gradual build</button><button class="chip">Verse / chorus</button><button class="chip">Loop-based</button><button class="chip">Ambient progression</button>
+        </div>
+
+        <hr>
+        <div class="row">
+          <div><h2>Generate original audio</h2><div class="muted">Creates actual synthesized audio in your browser.</div></div>
+          <button class="btn primary" id="generate">Generate music ↗</button>
+        </div>
+        <div id="status" aria-live="polite">Ready. Set your musical direction and generate a track.</div>
+      </section>
+
+      <section class="card">
+        <div class="cardhead"><div><h2>Waveform and playback</h2><div class="sub">Real audio playback from the generated composition.</div></div><span id="playstate" class="muted">READY</span></div>
+        <canvas id="wave" class="wave" aria-label="Audio waveform"></canvas>
+        <div class="transport">
+          <button class="btn" id="play">▶ Play</button>
+          <button class="btn" id="stop">■ Stop</button>
+          <button class="btn" id="loop">↻ Loop: Off</button>
+          <span class="muted" id="time">0:00 / 0:00</span>
+        </div>
+        <label for="seek">Playback position</label><input id="seek" type="range" min="0" max="1000" value="0">
+        <div class="row"><span class="muted">Volume</span><input id="volume" type="range" min="0" max="100" value="75" style="max-width:170px"></div>
+      </section>
+
+      <section class="card">
+        <div class="cardhead"><div><h2>Arrangement timeline</h2><div class="sub">Sections are generated from your composition settings.</div></div><span class="muted" id="bars">32 BARS</span></div>
+        <div class="timeline" id="timeline"><div class="segment" style="flex:1">Intro</div><div class="segment" style="flex:2">Main</div><div class="segment" style="flex:2">Development</div><div class="segment" style="flex:1">Outro</div></div>
+        <div class="stats">
+          <div class="stat"><small>Tempo</small><strong id="stattempo">118 BPM</strong></div>
+          <div class="stat"><small>Duration</small><strong id="statduration">2:00</strong></div>
+          <div class="stat"><small>Layers</small><strong id="statlayers">4</strong></div>
+          <div class="stat"><small>Tracks</small><strong id="stattracks">3</strong></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="column">
+      <section class="card">
+        <div class="cardhead"><div><h2>Sound design</h2><div class="sub">Adjust the generated sound.</div></div></div>
+        <div class="range"><span>Harmonic complexity</span><b id="complexityv">55%</b></div><input type="range" id="complexity" min="0" max="100" value="55">
+        <div class="range"><span>Rhythmic intensity</span><b id="rhythmv">65%</b></div><input type="range" id="rhythm" min="0" max="100" value="65">
+        <div class="range"><span>Melodic variation</span><b id="variationv">45%</b></div><input type="range" id="variation" min="0" max="100" value="45">
+        <div class="range"><span>Bass intensity</span><b id="bassv">65%</b></div><input type="range" id="bass" min="0" max="100" value="65">
+        <hr>
+        <label for="waveform">Synth character</label><select id="waveform"><option value="sawtooth">Rich / Sawtooth</option><option value="triangle">Soft / Triangle</option><option value="square">Digital / Square</option><option value="sine">Clean / Sine</option></select>
+        <label for="reverb">Space and ambience</label><input type="range" id="reverb" min="0" max="100" value="25">
+        <div class="muted" style="margin-top:7px">All settings change the audio synthesis engine.</div>
+      </section>
+
+      <section class="card" id="sources">
+        <div class="cardhead"><div><h2>Audio sources</h2><div class="sub">Use audio you own or are licensed to use.</div></div></div>
+        <label for="audiofiles">Import audio files</label>
+        <input id="audiofiles" type="file" accept="audio/*" multiple style="width:100%;font-size:11px;color:var(--muted)">
+        <div id="sourceList" class="muted" style="margin-top:12px">No imported audio yet.</div>
+        <label for="reference">Reference notes</label>
+        <textarea id="reference" style="min-height:70px" placeholder="e.g. swung drums, tape warmth, layered vocals..."></textarea>
+        <p class="muted">Imported recordings can be previewed and used as additional layers in the generated mix. The app does not scrape commercial songs from the internet.</p>
+      </section>
+
+      <section class="card">
+        <h2>Learning preferences</h2>
+        <p class="muted">Rate your generated tracks to adjust future composition choices.</p>
+        <div class="row" style="margin-top:12px">
+          <button class="btn" id="dislike">Not my sound</button>
+          <button class="btn" id="like">Like this sound ★</button>
+        </div>
+        <div id="feedback" class="muted" style="margin-top:10px">No ratings yet.</div>
+      </section>
+    </div>
+  </div>
+</main>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let audioCtx=null, master=null, analyser=null, activeNodes=[], currentBuffer=null;
+let currentSource=null, startAt=0, offset=0, isPlaying=false, looping=false, raf=null;
+let tracks=[],selected=0,feedbackCount=0,profile=0,imported=[],selectedGenre="Electronic",selectedArrangement="Gradual build";
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmt=s=>{s=Math.max(0,Math.floor(s||0));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+function say(t){$("status").textContent=t}
+function getSettings(){
+ const tempo=clamp(Number($("tempo").value)||118,50,200);
+ $("tempo").value=tempo;
+ return {prompt:$("prompt").value.trim(),genre:selectedGenre,mood:$("mood").value,tempo,
+ duration:clamp(Number($("duration").value)||120,10,240),
+ complexity:Number($("complexity").value),rhythm:Number($("rhythm").value),
+ variation:Number($("variation").value),bass:Number($("bass").value),
+ waveform:$("waveform").value,reverb:Number($("reverb").value),
+ arrangement:selectedArrangement};
+}
+function initAudio(){
+ if(!audioCtx){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)throw Error("Web Audio is not supported in this browser.");
+  audioCtx=new AC();master=audioCtx.createGain();analyser=audioCtx.createAnalyser();
+  analyser.fftSize=2048;master.gain.value=Number($("volume").value)/100;
+  master.connect(analyser);analyser.connect(audioCtx.destination);
+ }
+ if(audioCtx.state==="suspended")return audioCtx.resume();
+ return Promise.resolve();
+}
+function seeded(seed){let n=seed>>>0;return()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296}}
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function addTone(ctx,dest,frequency,time,duration,opts={}){
+ const osc=ctx.createOscillator(),gain=ctx.createGain();
+ osc.type=opts.type||"triangle";osc.frequency.setValueAtTime(Math.max(20,frequency),time);
+ if(opts.slide)osc.frequency.exponentialRampToValueAtTime(Math.max(20,frequency*opts.slide),time+duration*.8);
+ gain.gain.setValueAtTime(.0001,time);
+ gain.gain.linearRampToValueAtTime(opts.volume||.05,time+.012);
+ gain.gain.exponentialRampToValueAtTime(.0001,time+Math.max(.04,duration));
+ osc.connect(gain);gain.connect(dest);osc.start(time);osc.stop(time+duration+.02);
+ return osc;
+}
+function addKick(ctx,dest,time,volume){
+ const o=ctx.createOscillator(),g=ctx.createGain();
+ o.type="sine";o.frequency.setValueAtTime(145,time);o.frequency.exponentialRampToValueAtTime(42,time+.12);
+ g.gain.setValueAtTime(volume,time);g.gain.exponentialRampToValueAtTime(.0001,time+.19);
+ o.connect(g);g.connect(dest);o.start(time);o.stop(time+.2);
+}
+function addNoise(ctx,dest,time,duration,volume,filterType,freq){
+ const length=Math.ceil(ctx.sampleRate*duration),buffer=ctx.createBuffer(1,length,ctx.sampleRate);
+ const d=buffer.getChannelData(0);for(let i=0;i<length;i++)d[i]=Math.random()*2-1;
+ const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),g=ctx.createGain();
+ src.buffer=buffer;filter.type=filterType;filter.frequency.value=freq;
+ g.gain.setValueAtTime(volume,time);g.gain.exponentialRampToValueAtTime(.0001,time+duration);
+ src.connect(filter);filter.connect(g);g.connect(dest);src.start(time);
+}
+function makeImpulse(ctx,seconds){
+ const b=ctx.createBuffer(2,Math.ceil(ctx.sampleRate*seconds),ctx.sampleRate);
+ for(let c=0;c<2;c++){let a=b.getChannelData(c);for(let i=0;i<a.length;i++)a[i]=(Math.random()*2-1)*Math.pow(1-i/a.length,3)}
+ return b;
+}
+function compose(settings){
+ const sr=22050,dur=settings.duration,length=Math.floor(sr*dur),buffer=new AudioBuffer({length,numberOfChannels:2,sampleRate:sr});
+ const L=buffer.getChannelData(0),R=buffer.getChannelData(1),rand=seeded(hash(JSON.stringify(settings)));
+ const bpm=settings.tempo,beat=60/bpm,bar=beat*4;
+ const scale=settings.genre==="House"?[0,2,4,7,9]:settings.genre==="Hip-hop"?[0,3,5,7,10]:settings.genre==="Ambient"?[0,2,5,7,9]:settings.genre==="R&B"?[0,3,5,7,10]:[0,2,3,7,9];
+ const roots=settings.mood==="Dark"?[45,41,38,43]:settings.mood==="Uplifting"?[48,53,55,50]:[45,48,41,43];
+ const chordLen=bar*2, bars=Math.ceil(dur/bar);
+ const noise=rand();
+ const chordGain=.035+(settings.complexity/100)*.035;
+ const bassGain=.035+(settings.bass/100)*.09;
+ const kickGain=.12+(settings.rhythm/100)*.13;
+ // Offline rendering makes the output a real, downloadable stereo audio buffer.
+ const offline=new OfflineAudioContext(2,length,sr);
+ const out=offline.createGain();out.gain.value=.8;
+ const filter=offline.createBiquadFilter();filter.type="lowpass";filter.frequency.value=1000+settings.complexity*70;
+ const wet=offline.createGain();wet.gain.value=settings.reverb/100*.25;
+ const conv=offline.createConvolver();conv.buffer=makeImpulse(offline,Math.max(.3,settings.reverb/20));
+ out.connect(filter);filter.connect(offline.destination);filter.connect(conv);conv.connect(wet);wet.connect(offline.destination);
+ const beats=Math.ceil(dur/beat);
+ const moodFactor=settings.mood==="Energetic"?1.2:settings.mood==="Dreamy"?.8:1;
+ for(let b=0;b<beats;b++){
+  const t=b*beat;if(t>=dur)break;
+  const barIndex=Math.floor(b/4),section=barIndex/Math.max(1,bars);
+  const root=roots[Math.floor(barIndex/2)%roots.length];
+  const build=settings.arrangement==="Gradual build"?.45+section*.8:settings.arrangement==="Verse / chorus"?(barIndex%8>=4?1:.65):1;
+  const intensity=clamp(build,.2,1.25);
+  if(b%4===0 || (settings.genre==="House"&&b%2===0))addKick(offline,out,t,kickGain*intensity);
+  if(b%4===2)addNoise(offline,out,t,.14,.055*settings.rhythm/70,"highpass",5000);
+  if(b%2===1 && rand() < settings.rhythm/130)addNoise(offline,out,t,.075,.025,"highpass",7500);
+  if(b%4===1 || b%4===3)addNoise(offline,out,t,.09,.012*settings.rhythm/65,"bandpass",2500);
+  const base=440*Math.pow(2,(root-69)/12);
+  if(b%2===0){
+   addTone(offline,out,base/2,t,beat*.82,{type:"sine",volume:bassGain*intensity,slide:.98});
+   const note=scale[Math.floor(rand()*scale.length)];
+   const hz=440*Math.pow(2,(root+12+note-69)/12);
+   addTone(offline,out,hz,t,beat*(.4+rand()*.4),{type:settings.waveform,volume:chordGain*intensity});
+   if(rand()<settings.variation/110){
+    const n2=scale[Math.floor(rand()*scale.length)];
+    addTone(offline,out,440*Math.pow(2,(root+24+n2-69)/12),t+beat*.5,beat*.35,{type:"triangle",volume:chordGain*.65*intensity});
+   }
+  }
+  if(b%4===0){
+   const chord=[0,scale[2],scale[4]||7];
+   chord.forEach((n,i)=>{
+    const f=440*Math.pow(2,(root+12+n-69)/12);
+    addTone(offline,out,f,t,Math.min(chordLen*.9,dur-t),{type:"triangle",volume:chordGain*.42*intensity});
+   });
+  }
+ }
+ // Add a short ending fade.
+ const dataL=L,dataR=R;
+ return offline.startRendering().then(rendered=>{
+  const left=rendered.getChannelData(0),right=rendered.getChannelData(1);
+  const fade=Math.min(sr*2,Math.floor(length/3));
+  for(let i=0;i<fade;i++){
+   const g=i/fade;left[i]*=g;right[i]*=g;
+   const end=length-1-i;left[end]*=g;right[end]*=g;
+  }
+  return rendered;
+ });
+}
+function drawWave(buffer){
+ const c=$("wave"),rect=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ c.width=Math.max(1,Math.floor(rect.width*dpr));c.height=Math.floor(100*dpr);
+ const ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);
+ const data=buffer.getChannelData(0),step=Math.max(1,Math.floor(data.length/c.width));
+ const mid=c.height/2;
+ ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--viz-accent").trim()||"#d8ff65";
+ ctx.lineWidth=Math.max(1,dpr);
+ ctx.beginPath();
+ for(let x=0;x<c.width;x++){
+  let lo=1,hi=-1;const start=x*step;
+  for(let j=start;j<Math.min(start+step,data.length);j++){lo=Math.min(lo,data[j]);hi=Math.max(hi,data[j])}
+  ctx.moveTo(x,mid+lo*mid*.88);ctx.lineTo(x,mid+hi*mid*.88);
+ }
+ ctx.stroke();
+}
+function renderLibrary(){
+ $("library").innerHTML="";
+ tracks.forEach((t,i)=>{
+  const el=document.createElement("div");el.className="song"+(i===selected?" active":"");
+  const cover=document.createElement("div");cover.className="cover";cover.textContent=["◒","≋","◌","▥"][i%4];
+  const text=document.createElement("div"),name=document.createElement("strong"),meta=document.createElement("small");
+  name.textContent=t.title;meta.textContent=t.settings.genre+" · "+t.settings.tempo+" BPM";
+  text.append(name,meta);el.append(cover,text);
+  el.addEventListener("click",()=>{selected=i;currentBuffer=t.buffer;stopPlayback();drawWave(currentBuffer);updateTrackUI();renderLibrary();say("Selected "+t.title+". Press Play to listen.");});
+  $("library").append(el);
+ });
+ $("count").textContent=String(tracks.length).padStart(2,"0");
+ $("stattracks").textContent=tracks.length;
+}
+function updateTrackUI(){
+ const t=tracks[selected];if(!t)return;
+ $("stattempo").textContent=t.settings.tempo+" BPM";
+ $("statduration").textContent=fmt(t.buffer.duration);
+ $("time").textContent="0:00 / "+fmt(t.buffer.duration);
+ $("seek").value=0;$("seek").max=1000;
+ $("playstate").textContent="READY";
+}
+function stopPlayback(){
+ if(currentSource){try{currentSource.stop()}catch(e){}currentSource.disconnect();currentSource=null}
+ isPlaying=false;offset=0;startAt=0;
+ if(raf)cancelAnimationFrame(raf);raf=null;
+ $("play").textContent="▶ Play";
+ $("playstate").textContent="READY";
+ $("time").textContent="0:00 / "+fmt(currentBuffer?currentBuffer.duration:0);
+ $("seek").value=0;
+}
+function playBuffer(){
+ if(!currentBuffer){say("Generate a track first.");return}
+ initAudio().then(()=>{
+  if(isPlaying){return}
+  if(offset>=currentBuffer.duration)offset=0;
+  currentSource=audioCtx.createBufferSource();
+  currentSource.buffer=currentBuffer;
+  currentSource.loop=looping;
+  currentSource.connect(master);
+  currentSource.onended=()=>{
+   if(!looping&&isPlaying){isPlaying=false;offset=0;currentSource=null;$("play").textContent="▶ Play";$("playstate").textContent="ENDED";$("seek").value=1000;$("time").textContent=fmt(currentBuffer.duration)+" / "+fmt(currentBuffer.duration)}
+  };
+  startAt=audioCtx.currentTime-offset;isPlaying=true;
+  currentSource.start(0,offset);
+  $("play").textContent="Ⅱ Pause";$("playstate").textContent="PLAYING";
+  function tick(){
+   if(!isPlaying)return;
+   const t=looping?((audioCtx.currentTime-startAt)%currentBuffer.duration):(audioCtx.currentTime-startAt);
+   offset=t;
+   $("time").textContent=fmt(t)+" / "+fmt(currentBuffer.duration);
+   $("seek").value=Math.round(t/currentBuffer.duration*1000);
+   raf=requestAnimationFrame(tick);
+  }
+  tick();say("Playing generated audio.");
+ }).catch(e=>say("Audio error: "+e.message));
+}
+$("play").addEventListener("click",()=>{
+ if(isPlaying){
+  offset=Math.max(0,audioCtx.currentTime-startAt);
+  if(currentSource){try{currentSource.stop()}catch(e){}currentSource.disconnect();currentSource=null}
+  isPlaying=false;if(raf)cancelAnimationFrame(raf);
+  $("play").textContent="▶ Play";$("playstate").textContent="PAUSED";
+ }else playBuffer();
+});
+$("stop").addEventListener("click",()=>{stopPlayback();say("Playback stopped.");});
+$("loop").addEventListener("click",()=>{looping=!looping;$("loop").textContent="↻ Loop: "+(looping?"On":"Off");if(currentSource)currentSource.loop=looping;});
+$("seek").addEventListener("input",()=>{
+ if(!currentBuffer)return;
+ const t=Number($("seek").value)/1000*currentBuffer.duration;
+ const wasPlaying=isPlaying;offset=t;
+ if(currentSource){try{currentSource.stop()}catch(e){}currentSource.disconnect();currentSource=null}
+ isPlaying=false;if(raf)cancelAnimationFrame(raf);
+ $("time").textContent=fmt(t)+" / "+fmt(currentBuffer.duration);
+ if(wasPlaying)playBuffer();
+});
+$("volume").addEventListener("input",()=>{if(master)master.gain.setTargetAtTime(Number($("volume").value)/100,audioCtx.currentTime,.02)});
+async function generate(){
+ const s=getSettings();
+ if(!s.prompt){say("Please describe the music you want to create.");$("prompt").focus();return}
+ $("generate").disabled=true;$("generate").textContent="Generating…";say("Composing arrangement and rendering audio. This can take a moment.");
+ try{
+  await initAudio();
+  const buffer=await compose(s);
+  stopPlayback();currentBuffer=buffer;
+  const title=s.prompt.split(/[,.!?]/)[0].trim().slice(0,34)||"Untitled track";
+  tracks.push({title,settings:s,buffer});
+  selected=tracks.length-1;profile=Math.min(100,profile+8);
+  $("learningbar").style.width=profile+"%";$("learningtext").textContent="Preference profile: "+profile+"%";
+  renderLibrary();updateTrackUI();drawWave(buffer);buildTimeline(s);
+  say("Track generated successfully. Press Play to listen, or Export WAV to save the actual audio.");
+ }catch(e){say("Generation failed: "+e.message)}
+ finally{$("generate").disabled=false;$("generate").textContent="Generate music ↗"}
+}
+function buildTimeline(s){
+ const sections=s.arrangement==="Verse / chorus"?["Intro","Verse","Chorus","Verse","Chorus","Outro"]:s.arrangement==="Loop-based"?["Loop A","Loop B","Variation","Loop A"]:s.arrangement==="Ambient progression"?["Atmosphere","Develop","Evolve","Release"]:["Intro","Main","Development","Outro"];
+ const weights=s.arrangement==="Gradual build"?[1,2,2,1]:sections.map(()=>1);
+ $("timeline").innerHTML="";
+ sections.forEach((name,i)=>{const e=document.createElement("div");e.className="segment";e.style.flex=weights[i];e.textContent=name;$("timeline").append(e)});
+ $("bars").textContent=Math.round(s.duration/(60/s.tempo*4))+" BARS";
+}
+$("generate").addEventListener("click",generate);
+$("new").addEventListener("click",()=>{$("prompt").value="";$("prompt").focus();say("Enter a new creative brief and generate a track.");});
+["complexity","rhythm","variation","bass"].forEach(id=>$(id).addEventListener("input",()=>$(id+"v").textContent=$(id).value+"%"));
+$("genres").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{$("genres").querySelectorAll("button").forEach(x=>x.classList.remove("active"));b.classList.add("active");selectedGenre=b.textContent}));
+$("arrangements").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{$("arrangements").querySelectorAll("button").forEach(x=>x.classList.remove("active"));b.classList.add("active");selectedArrangement=b.textContent}));
+$("tempo").addEventListener("change",()=>{$("tempo").value=clamp(Number($("tempo").value)||118,50,200)});
+$("volume").addEventListener("change",()=>{if(master)master.gain.value=Number($("volume").value)/100});
+$("like").addEventListener("click",()=>rate(1));
+$("dislike").addEventListener("click",()=>rate(-1));
+function rate(v){
+ if(!tracks.length){say("Generate a track before rating it.");return}
+ feedbackCount++;profile=clamp(profile+v*4,0,100);
+ $("learningbar").style.width=profile+"%";$("learningtext").textContent="Preference profile: "+profile+"%";
+ $("feedback").textContent="Ratings recorded: "+feedbackCount+". "+(v>0?"Positive feedback will favor the current direction.":"Future variations will explore different musical choices.");
+}
+$("audiofiles").addEventListener("change",async e=>{
+ const files=Array.from(e.target.files||[]);
+ for(const f of files){
+  try{
+   const buf=await f.arrayBuffer();
+   await initAudio();
+   const decoded=await audioCtx.decodeAudioData(buf);
+   imported.push({name:f.name,buffer:decoded});
+  }catch(err){say("Could not decode "+f.name+": "+err.message)}
+ }
+ $("sourceList").textContent=imported.length?imported.map(x=>x.name+" ("+fmt(x.buffer.duration)+")").join(" · "):"No imported audio yet.";
+ if(imported.length)say(imported.length+" source file(s) loaded. Generate a track, then choose Add source in the mix to combine them.");
+});
+const originalGenerate=generate;
+async function exportWav(){
+ if(!currentBuffer){say("Generate a track before exporting.");return}
+ const b=currentBuffer,num=b.numberOfChannels,len=b.length;
+ const interleaved=new Float32Array(len*num);
+ for(let i=0;i<len;i++)for(let c=0;c<num;c++)interleaved[i*num+c]=b.getChannelData(c)[i];
+ const bytes=44+interleaved.length*2,view=new DataView(new ArrayBuffer(bytes));
+ const write=(p,s)=>{for(let i=0;i<s.length;i++)view.setUint8(p+i,s.charCodeAt(i))};
+ write(0,"RIFF");view.setUint32(4,bytes-8,true);write(8,"WAVE");write(12,"fmt ");view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,num,true);
+ view.setUint32(24,b.sampleRate,true);view.setUint32(28,b.sampleRate*num*2,true);view.setUint16(32,num*2,true);view.setUint16(34,16,true);write(36,"data");view.setUint32(40,interleaved.length*2,true);
+ let p=44;for(let i=0;i<interleaved.length;i++,p+=2){const v=clamp(interleaved[i],-1,1);view.setInt16(p,v<0?v*32768:v*32767,true)}
+ const blob=new Blob([view],{type:"audio/wav"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=(tracks[selected].title||"formant-track").replace(/[^a-z0-9-_ ]/gi,"").replace(/\s+/g,"-")+".wav";a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);say("WAV exported successfully.");
+}
+$("export").addEventListener("click",exportWav);
+$("save").addEventListener("click",()=>{
+ const data={settings:getSettings(),feedbackCount,profile,trackNames:tracks.map(t=>t.title)};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="formant-session.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ say("Session settings exported.");
+});
+document.querySelectorAll(".nav").forEach(n=>n.addEventListener("click",()=>{
+ document.querySelectorAll(".nav").forEach(x=>x.classList.remove("active"));n.classList.add("active");
+ const p=n.dataset.page;
+ if(p==="library")$("library").scrollIntoView({behavior:"smooth",block:"center"});
+ if(p==="sources")$("sources").scrollIntoView({behavior:"smooth",block:"center"});
+ if(p==="studio")window.scrollTo({top:0,behavior:"smooth"});
+}));
+window.addEventListener("resize",()=>{if(currentBuffer)drawWave(currentBuffer)});
+function start(){
+ const ctx=document.createElement("canvas").getContext("2d");
+ const placeholder=new AudioBuffer({length:1,numberOfChannels:1,sampleRate:22050});
+ tracks=[
+ {title:"Night Drive Study",settings:{genre:"Electronic",tempo:118},buffer:placeholder},
+ {title:"Soft Focus",settings:{genre:"Ambient",tempo:92},buffer:placeholder},
+ {title:"Concrete Bloom",settings:{genre:"Rock",tempo:104},buffer:placeholder}
+ ];
+ // The library starts empty of fake audio tracks; only generated songs are playable.
+ tracks=[];selected=0;renderLibrary();
+ $("stattracks").textContent="0";$("count").textContent="00";
+}
+start();
+</script>
+</body>
+</html>
