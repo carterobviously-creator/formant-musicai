@@ -9,5 +9,5 @@ py -m http.server 2323
     pause
     mkdir models
     cd models
-    git clone https://huggingface.co/datasets/Carter-123/formant_musicai/tree/main
+    git clone https://github.com/carterobviously-creator/formant-ai-models
     )
